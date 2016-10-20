@@ -1,0 +1,11 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"path": "github.com/gocarina/gocsv",
+			"revision": "80ac68b8d188bc11f9bc83b372a83bc65d4e5cde",
+			"revisionTime": "2016-08-03T09:53:29+03:00"
+		}
+	]
+}
