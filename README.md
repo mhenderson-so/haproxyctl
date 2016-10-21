@@ -3,9 +3,10 @@
 HAProxyCTL is a small Golang library for retriving the control settings
 from a haproxy instance over HTTP.
 
-It is used for querying remote HAProxy instances, and can send server actions.
+It is used for querying remote HAProxy instances, and can send server actions such as putting 
+a server into maintenance, or disabling health checks.
 
-For details about usage, including commands, see the [GoDoc documentation below]((#godoc-documentation-haproxyctl).
+For details about usage, including commands, see the [GoDoc documentation below](#godoc-documentation-haproxyctl).
 
 <!-- TOC -->
 
