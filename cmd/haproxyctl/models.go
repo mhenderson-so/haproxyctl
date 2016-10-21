@@ -9,10 +9,24 @@ import (
 
 // HAProxyConfig holds the basic configuration options for haproxyctl
 type HAProxyConfig struct {
-	URL      url.URL
-	Username string
-	Password string
-	client   http.Client
+	URL       url.URL
+	Username  string
+	Password  string
+	client    *http.Client
+	setupdone bool
+}
+
+func (c *HAProxyConfig) setupClient() {
+	if c.setupdone {
+		return
+	}
+
+	c.client = &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	c.setupdone = true
 }
 
 // Statistics is a slice of HAProxy Statistics
@@ -20,8 +34,8 @@ type Statistics []Statistic
 
 // Statistic contains a set of HAProxy Statistics
 type Statistic struct {
-	ProxyName               string    `csv:"# pxname"`
-	ServiceName             string    `csv:"svname"`
+	BackendName             string    `csv:"# pxname"`
+	FrontendName            string    `csv:"svname"`
 	QueueCurrent            uint64    `csv:"qcur"`
 	QueueMax                uint64    `csv:"qmax"`
 	SessionsCurrent         uint64    `csv:"scur"`
@@ -119,4 +133,23 @@ const (
 	Server
 	// Socket indicates this is a socket
 	Socket
+)
+
+// Action is a set of actions that we can send to a HAProxy server
+type Action string
+
+const (
+	ActionSetStateToReady     Action = "ready"
+	ActionSetStateToDrain     Action = "drain"
+	ActionSetStateToMaint     Action = "maint"
+	ActionHealthDisableChecks Action = "dhlth"
+	ActionHealthEnableChecks  Action = "ehlth"
+	ActionHealthForceUp       Action = "hrunn"
+	ActionHealthForceNoLB     Action = "hnolb"
+	ActionHealthForceDown     Action = "hdown"
+	ActionAgentDisablechecks  Action = "dagent"
+	ActionAgentEnablechecks   Action = "eagent"
+	ActionAgentForceUp        Action = "arunn"
+	ActionAgentForceDown      Action = "adown"
+	ActionKillSessions        Action = "shutdown"
 )
