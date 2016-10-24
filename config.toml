@@ -1,0 +1,10 @@
+DefaultUsername = "admin"
+DefaultPassword = "password"
+
+[[LoadBalancers]]
+Name = "LB01"
+Url = "http://10.0.0.11:7000/"
+
+[[LoadBalancers]]
+Name = "LB02"
+Url = "http://10.0.0.12:7000/"

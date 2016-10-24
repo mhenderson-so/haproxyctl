@@ -3,9 +3,28 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "UJTpOZ5IuuyoWFrS42uw/167mn0=",
+			"path": "github.com/BurntSushi/toml",
+			"revision": "f0aeabca5a127c4078abb8c8d64298b147264b55",
+			"revisionTime": "2016-04-26T10:16:13Z"
+		},
+		{
 			"path": "github.com/gocarina/gocsv",
 			"revision": "80ac68b8d188bc11f9bc83b372a83bc65d4e5cde",
 			"revisionTime": "2016-08-03T09:53:29+03:00"
+		},
+		{
+			"checksumSHA1": "DdH3xAkzAWJ4B/LGYJyCeRsly2I=",
+			"path": "github.com/mattn/go-runewidth",
+			"revision": "d037b52ae5c0338c2bb18da01fb7ddf0e8be9aa1",
+			"revisionTime": "2016-02-16T11:09:16Z"
+		},
+		{
+			"checksumSHA1": "txj5yUDiaSATtBLDlT0f6uaiIP8=",
+			"path": "github.com/olekukonko/tablewriter",
+			"revision": "cca8bbc0798408af109aaaa239cbd2634846b340",
+			"revisionTime": "2016-01-15T11:10:02Z"
 		}
-	]
+	],
+	"rootPath": "github.com/mhenderson-so/haproxyctl"
 }
