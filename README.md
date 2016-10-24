@@ -1,12 +1,13 @@
 # haproxyctl
 
 HAProxyCTL is a small Golang library for retriving the control settings
-from a haproxy instance over HTTP.
+from a haproxy instance over HTTP (not over a Unix socket, as other projects do), using
+HAProxy's built-in stats web interface.
 
 It is used for querying remote HAProxy instances, and can send server actions such as putting 
 a server into maintenance, or disabling health checks.
 
-For details about usage, including commands, see the [GoDoc documentation below](#godoc-documentation-haproxyctl).
+For details about usage, including commands, see the [GoDoc documentation](https://godoc.org/github.com/mhenderson-so/haproxyctl/cmd/haproxyctl).
 
 <!-- TOC -->
 
@@ -14,20 +15,7 @@ For details about usage, including commands, see the [GoDoc documentation below]
     - [Example usage](#example-usage)
         - [Discovering HAProxy statistics](#discovering-haproxy-statistics)
         - [Performing a HAProxy action command](#performing-a-haproxy-action-command)
-- [GoDoc documentation (haproxyctl)](#godoc-documentation-haproxyctl)
-    - [Usage](#usage)
-            - [type Action](#type-action)
-            - [type Duration](#type-duration)
-            - [func (*Duration) String](#func-duration-string)
-            - [func (*Duration) UnmarshalCSV](#func-duration-unmarshalcsv)
-            - [type EntryType](#type-entrytype)
-            - [type HAProxyConfig](#type-haproxyconfig)
-            - [func (*HAProxyConfig) GetRequestURI](#func-haproxyconfig-getrequesturi)
-            - [func (*HAProxyConfig) GetStats](#func-haproxyconfig-getstats)
-            - [func (*HAProxyConfig) SendAction](#func-haproxyconfig-sendaction)
-            - [func (*HAProxyConfig) SetCredentialsFromAuthString](#func-haproxyconfig-setcredentialsfromauthstring)
-            - [type Statistic](#type-statistic)
-            - [type Statistics](#type-statistics)
+    - [Example program](#example-program)
 
 <!-- /TOC -->
 
@@ -121,206 +109,35 @@ func main() {
 }
 ```
 
-# GoDoc documentation (haproxyctl)
---
-    import "github.com/mhenderson-so/haproxyctl/cmd/haproxyctl"
+## Example program
 
+There is a small example program contained in the root directory that can perform the
+haproxy commands exposed by haproxyctl. You can build with `go build`. You will need to edit
+the supplied example `config.toml` with your haproxy environment.
 
-## Usage
-
-#### type Action
-
-```go
-type Action string
 ```
+Usage: haproxyctl [-config config.toml] action server1,server2 backend
+    -config config.toml - Optional parameter to the configuration file for your haproxy nodes
+    action - the action to perform (see below for valid actions)
+    server1,server2 - A comma-seperated list of back-end servers to perform the action on
+    backend - The name of the backend to apply the action to
 
-Action is a set of actions that we can send to a HAProxy server
+Example: haproxyctl get
+Example: haproxyctl ready ny-web01,ny-web02 prod-web
 
-```go
-const (
-	ActionSetStateToReady     Action = "ready"
-	ActionSetStateToDrain     Action = "drain"
-	ActionSetStateToMaint     Action = "maint"
-	ActionHealthDisableChecks Action = "dhlth"
-	ActionHealthEnableChecks  Action = "ehlth"
-	ActionHealthForceUp       Action = "hrunn"
-	ActionHealthForceNoLB     Action = "hnolb"
-	ActionHealthForceDown     Action = "hdown"
-	ActionAgentDisablechecks  Action = "dagent"
-	ActionAgentEnablechecks   Action = "eagent"
-	ActionAgentForceUp        Action = "arunn"
-	ActionAgentForceDown      Action = "adown"
-	ActionKillSessions        Action = "shutdown"
-)
+Valid actions are:
+    get      - Gets the status of the backends. No additional arguments are required
+    ready    - Sets the server state to 'ready'
+    drain    - Sets the server state to 'drain
+    maint    - Sets the server state to 'maintenance'
+    dhlth    - Disables health checks
+    ehlth    - Enables health checks
+    hrunn    - Forces the server to be UP
+    hnolb    - Forces the server to disable load balancing
+    hdown    - Forces the server to be DOWN
+    dagent   - Disables agent checks
+    eagent   - Enables agent checks
+    arunn    - Forces agent to be UP
+    adown    - Forces agent to be DOWN
+    shutdown - Kills all sessions
 ```
-
-#### type Duration
-
-```go
-type Duration struct {
-	time.Duration
-}
-```
-
-Duration is a type that we can attach CSV marshalling to for getting
-time.Duration
-
-#### func (*Duration) String
-
-```go
-func (date *Duration) String() string
-```
-You could also use the standard Stringer interface
-
-#### func (*Duration) UnmarshalCSV
-
-```go
-func (date *Duration) UnmarshalCSV(csv string) (err error)
-```
-UnmarshalCSV converts the seconds timestamp into a golang time.Duration
-
-#### type EntryType
-
-```go
-type EntryType int
-```
-
-EntryType can be a Frontend, Backend, Server or Socket
-
-```go
-const (
-	// Frontend indicates this is a front-end
-	Frontend EntryType = iota
-	// Backend indicates this is a back-end
-	Backend
-	// Server indicates this is a server
-	Server
-	// Socket indicates this is a socket
-	Socket
-)
-```
-
-#### type HAProxyConfig
-
-```go
-type HAProxyConfig struct {
-	URL      url.URL
-	Username string
-	Password string
-}
-```
-
-HAProxyConfig holds the basic configuration options for haproxyctl
-
-#### func (*HAProxyConfig) GetRequestURI
-
-```go
-func (c *HAProxyConfig) GetRequestURI(csv bool) string
-```
-GetRequestURI returns the URL to be used when sending a request
-
-#### func (*HAProxyConfig) GetStats
-
-```go
-func (c *HAProxyConfig) GetStats() (*Statistics, error)
-```
-GetStats gets the latest set of statistics from HAProxy
-
-#### func (*HAProxyConfig) SendAction
-
-```go
-func (c *HAProxyConfig) SendAction(servers []string, backend string, action Action) (done bool, allok bool, err error)
-```
-SendAction sends an action to HAProxy to perform on a list of servers. For
-example, putting servers into maintenance mode, or disabling health checks. The
-return parameters indicate whether the request was serviced, whether everything
-was OK, and any resulting errors. For example, a request may have been applied
-to some of the nodes requested, but not others. In which case "done" will be
-true, but "allok" will be false, and the error will contain a brief text.
-
-#### func (*HAProxyConfig) SetCredentialsFromAuthString
-
-```go
-func (c *HAProxyConfig) SetCredentialsFromAuthString(authstring string) error
-```
-SetCredentialsFromAuthString is used when you have credentails in an auth
-string, but don't want to send the separate username/passwords
-
-#### type Statistic
-
-```go
-type Statistic struct {
-	BackendName             string    `csv:"# pxname"`
-	FrontendName            string    `csv:"svname"`
-	QueueCurrent            uint64    `csv:"qcur"`
-	QueueMax                uint64    `csv:"qmax"`
-	SessionsCurrent         uint64    `csv:"scur"`
-	SessionsMax             uint64    `csv:"smax"`
-	SessionLimit            uint64    `csv:"slim"`
-	SessionsTotal           uint64    `csv:"stot"`
-	BytesIn                 uint64    `csv:"bin"`
-	BytesOut                uint64    `csv:"bout"`
-	DeniedRequests          uint64    `csv:"dreq"`
-	DeniedResponses         uint64    `csv:"dresp"`
-	ErrorsRequests          uint64    `csv:"ereq"`
-	ErrorsConnections       uint64    `csv:"econ"`
-	ErrorsResponses         uint64    `csv:"eresp"`
-	WarningsRetries         uint64    `csv:"wretr"`
-	WarningsDispatches      uint64    `csv:"wredis"`
-	Status                  string    `csv:"status"`
-	Weight                  uint64    `csv:"weight"`
-	IsActive                uint64    `csv:"act"`
-	IsBackup                uint64    `csv:"bck"`
-	CheckFailed             uint64    `csv:"chkfail"`
-	CheckDowned             uint64    `csv:"chkdown"`
-	StatusLastChanged       Duration  `csv:"lastchg"`
-	Downtime                uint64    `csv:"downtime"`
-	QueueLimit              uint64    `csv:"qlimit"`
-	ProcessID               uint64    `csv:"pid"`
-	ProxyID                 uint64    `csv:"iid"`
-	ServiceID               uint64    `csv:"sid"`
-	Throttle                uint64    `csv:"throttle"`
-	LBTotal                 uint64    `csv:"lbtot"`
-	Tracked                 uint64    `csv:"tracked"`
-	Type                    EntryType `csv:"type"`
-	Rate                    uint64    `csv:"rate"`
-	RateLimit               uint64    `csv:"rate_lim"`
-	RateMax                 uint64    `csv:"rate_max"`
-	CheckStatus             string    `csv:"check_status"`
-	CheckCode               string    `csv:"check_code"`
-	CheckDuration           uint64    `csv:"check_duration"`
-	HTTPResponse1xx         uint64    `csv:"hrsp_1xx"`
-	HTTPResponse2xx         uint64    `csv:"hrsp_2xx"`
-	HTTPResponse3xx         uint64    `csv:"hrsp_3xx"`
-	HTTPResponse4xx         uint64    `csv:"hrsp_4xx"`
-	HTTPResponse5xx         uint64    `csv:"hrsp_5xx"`
-	HTTPResponseOther       uint64    `csv:"hrsp_other"`
-	CheckFailedDets         uint64    `csv:"hanafail"`
-	RequestRate             uint64    `csv:"req_rate"`
-	RequestRateMax          uint64    `csv:"req_rate_max"`
-	RequestTotal            uint64    `csv:"req_tot"`
-	AbortedByClient         uint64    `csv:"cli_abrt"`
-	AbortedByServer         uint64    `csv:"srv_abrt"`
-	CompressedBytesIn       uint64    `csv:"comp_in"`
-	CompressedBytesOut      uint64    `csv:"comp_out"`
-	CompressedBytesBypassed uint64    `csv:"comp_byp"`
-	CompressedResponses     uint64    `csv:"comp_rsp"`
-	LastSession             Duration  `csv:"lastsess"`
-	LastCheck               string    `csv:"last_chk"`
-	LastAgentCheck          string    `csv:"last_agt"`
-	AvgQueueTime            uint64    `csv:"qtime"`
-	AvgConnectTime          uint64    `csv:"ctime"`
-	AvgResponseTime         uint64    `csv:"rtime"`
-	AvgTotalTime            uint64    `csv:"ttime"`
-}
-```
-
-Statistic contains a set of HAProxy Statistics
-
-#### type Statistics
-
-```go
-type Statistics []Statistic
-```
-
-Statistics is a slice of HAProxy Statistics
