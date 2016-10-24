@@ -58,7 +58,7 @@ type Statistic struct {
 	CheckFailed             uint64    `csv:"chkfail"`
 	CheckDowned             uint64    `csv:"chkdown"`
 	StatusLastChanged       Duration  `csv:"lastchg"`
-	Downtime                uint64    `csv:"downtime"`
+	Downtime                Duration  `csv:"downtime"`
 	QueueLimit              uint64    `csv:"qlimit"`
 	ProcessID               uint64    `csv:"pid"`
 	ProxyID                 uint64    `csv:"iid"`
@@ -118,7 +118,7 @@ func (date *Duration) UnmarshalCSV(csv string) (err error) {
 
 // You could also use the standard Stringer interface
 func (date *Duration) String() string {
-	return date.String()
+	return time.Duration(date.Nanoseconds()).String()
 }
 
 // EntryType can be a Frontend, Backend, Server or Socket
